@@ -69,6 +69,21 @@ void dump_instruction(instruction* instr) {
 	printf("0x%x\n", instr->opcode);
 }
 
+void write_instruction(FILE* fp, instruction* instr) {	
+	/*
+	ret->instruction = (instr & 0xF000) >> 12;
+	ret->reg_op0	 = (instr & 0xF00 ) >> 8;
+	ret->reg_op1	 = (instr & 0xF0  ) >> 4;
+	ret->reg_op2	 = (instr & 0xF   );
+	ret->immediate	 = (instr & 0xFF  );
+	*/
+	long result = 0;
+	unsigned opcode = instr->opcode;
+	opcode = opcode << 12;
+	result |= opcode << 12;
+	fwrite(&opcode, sizeof(unsigned), 1, fp);
+}
+
 #define MAX_INSTRUCTIONS 256
 int main(int argc, char** argv) {
 	char* prog = "hlt";
@@ -96,13 +111,28 @@ int main(int argc, char** argv) {
 		line = strtok(NULL, "\n");
 	}
 
+	//assembled!
+	//write assembly to binary
+	FILE* fp = fopen("a.out", "w");
+	if (!fp) {
+		printf("Assembler error: Couldn't open output file for writing\n");
+		exit(1);
+	}
+
+	//is using linenum here unsafe?
+	for (int i = 0; i < linenum; i++) {
+		write_instruction(fp, ast[i]);
+	}
+	fclose(fp);
+
+	/*
 	//program assembled!
 	//print out opcodes
 	for (int i = 0; i <	MAX_INSTRUCTIONS; i++) {
 		if (!ast[i]) break;
-
 		dump_instruction(ast[i]);
 	}
+	*/
 	
 	return 0;
 }
