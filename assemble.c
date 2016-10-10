@@ -1,25 +1,9 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include "common.h"
 
-#define MAX_ARGS 3
-
-typedef enum instruction_type {
-	REG_TYPE = 0,
-	IMM_TYPE,
-} instr_type;
-
-typedef struct instr_arg {
-	instr_type type;
-	short val;
-} instr_arg;
-
-typedef struct instruction {
+typedef struct instr_p {
 	short opcode;
 	instr_arg args[MAX_ARGS];
-} instruction;
+} instr_p;
 
 short parse_op(char* op) {
 	if (!strcmp(op, "hlt") || !strcmp(op, "HLT")) {
@@ -62,8 +46,8 @@ instr_arg* parse_arg(char* arg_str) {
 	return arg;
 }
 
-instruction* parse_instruction(char** tokens, int count) {
-	instruction* ret = malloc(sizeof(instruction));
+instr_p* parse_instruction(char** tokens, int count) {
+	instr_p* ret = malloc(sizeof(instr_p));
 	ret->opcode = parse_op(tokens[0]);
 
 	//count is not zero indexed
@@ -78,11 +62,15 @@ instruction* parse_instruction(char** tokens, int count) {
 	return ret;
 }
 
-void dump_instruction(instruction* instr) {
-	printf("0x%x\n", instr->opcode);
+void dump_instruction(instr_p* instr) {
+	printf("0x%x ", instr->opcode);
+	for (int i = 0; i < MAX_ARGS; i++) {
+		printf("0x%x ", instr->args[i].val);
+	}
+	printf("\n");
 }
 
-void write_instruction(FILE* fp, instruction* instr) {	
+void write_instruction(FILE* fp, instr_p* instr) {	
 	/*
 	ret->instruction = (instr & 0xF000) >> 12;
 	ret->reg_op0	 = (instr & 0xF00 ) >> 8;
@@ -91,11 +79,11 @@ void write_instruction(FILE* fp, instruction* instr) {
 	ret->immediate	 = (instr & 0xFF  );
 	*/
 	int result = 0;
-	result |= (instr->opcode) << 12;
+	result |= (instr->opcode	 ) << 12;
 	result |= (instr->args[0].val) << 8;
 	result |= (instr->args[1].val) << 4;
-	result |= (instr->args[2].val & 0xF) ;
-	result |= (instr->args[3].val & 0xFF);
+	result |= (instr->args[2].val & 0xF);
+	//result |= (instr->args[3].val & 0xF);
 
 	printf("writing 0x%x\n", result);
 
@@ -118,12 +106,14 @@ int main(int argc, char** argv) {
 	fread(&prog, sizeof(char), sizeof(prog), input_file);
 	fclose(input_file);
 
-	instruction** ast = malloc(sizeof(instruction) * MAX_INSTRUCTIONS);
+	instr_p** ast = malloc(sizeof(instr_p) * MAX_INSTRUCTIONS);
 	unsigned linenum = 0;
-	
-	//split by each line
-	char* line = strtok(prog, "\n");
-	while (line) {
+	//spit by each line 
+	char* line, *string, *tofree;
+	line = string = prog;
+	while ((line = strsep(&string, "\n")) != NULL) {
+		if (!strlen(line)) continue;
+
 		//split this line into tokens
 		//TODO remove this constant
 		char** tokens = malloc(sizeof(char*) * 32);
@@ -139,9 +129,14 @@ int main(int argc, char** argv) {
 		//now that we've split the line into individual tokens,
 		//parse the instruction this represents and add to instruction list
 		ast[linenum++] = parse_instruction(tokens, token_count);
+		
+		free(tokens);
+		free(copy);
 
-		line = strtok(NULL, "\n");
+		//line = strtok(NULL, "\n");
 	}
+	
+	free(tofree);
 
 	//assembled!
 	//write assembly to binary
@@ -159,12 +154,11 @@ int main(int argc, char** argv) {
 
 	//program assembled!
 	//print out opcodes
-	/*
+	printf("instr dump\n-------------\n");
 	for (int i = 0; i <	MAX_INSTRUCTIONS; i++) {
 		if (!ast[i]) break;
 		dump_instruction(ast[i]);
 	}
-	*/
 
 	for (int i = 0; i < linenum; i++) {
 		free(ast[i]);
