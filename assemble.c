@@ -7,13 +7,22 @@ typedef struct instr_p {
 
 short parse_op(char* op) {
 	if (!strcmp(op, "hlt") || !strcmp(op, "HLT")) {
-		return 0x00;
+		return HLT_INSTR;
 	}
 	else if (!strcmp(op, "mov") || !strcmp(op, "MOV")) {
-		return 0x01;
+		return MOV_INSTR;
 	}
 	else if (!strcmp(op, "add") || !strcmp(op, "ADD")) {
-		return 0x02;
+		return ADD_INSTR;
+	}
+	else if (!strcmp(op, "sub") || !strcmp(op, "SUB")) {
+		return SUB_INSTR;
+	}
+	else if (!strcmp(op, "mul") || !strcmp(op, "MUL")) {
+		return MUL_INSTR;
+	}
+	else if (!strcmp(op, "div") || !strcmp(op, "DIV")) {
+		return DIV_INSTR;
 	}
 
 	printf("Parsing error: Unknown instruction %s\n", op);
@@ -21,7 +30,6 @@ short parse_op(char* op) {
 }
 
 instr_arg* parse_arg(char* arg_str) {
-	printf("parsing arg %s\n", arg_str);
 	instr_arg* arg = malloc(sizeof(instr_arg));
 	switch (arg_str[0]) {
 		case '#':
@@ -71,21 +79,11 @@ void dump_instruction(instr_p* instr) {
 }
 
 void write_instruction(FILE* fp, instr_p* instr) {	
-	/*
-	ret->instruction = (instr & 0xF000) >> 12;
-	ret->reg_op0	 = (instr & 0xF00 ) >> 8;
-	ret->reg_op1	 = (instr & 0xF0  ) >> 4;
-	ret->reg_op2	 = (instr & 0xF   );
-	ret->immediate	 = (instr & 0xFF  );
-	*/
 	int result = 0;
 	result |= (instr->opcode	 ) << 12;
 	result |= (instr->args[0].val) << 8;
 	result |= (instr->args[1].val) << 4;
 	result |= (instr->args[2].val & 0xF);
-	//result |= (instr->args[3].val & 0xF);
-
-	printf("writing 0x%x\n", result);
 
 	fwrite(&result, sizeof(result), 1, fp);
 }
@@ -132,8 +130,6 @@ int main(int argc, char** argv) {
 		
 		free(tokens);
 		free(copy);
-
-		//line = strtok(NULL, "\n");
 	}
 	
 	free(tofree);

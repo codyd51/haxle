@@ -4,9 +4,14 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define HLT_INSTR  0x00
-#define MOV_INSTR  0x01
-#define ADD_INSTR  0x02
+typedef enum instr {
+	HLT_INSTR = 0x00,
+	MOV_INSTR,
+	ADD_INSTR,
+	SUB_INSTR,
+	MUL_INSTR,
+	DIV_INSTR,
+} instr;
 
 #define MAX_ARGS 3
 

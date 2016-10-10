@@ -19,7 +19,7 @@ int fetch(haxle_instance* vm) {
 }
 
 instruction* decode(int instr) { 
-	printf("decoding 0x%x\n", instr);
+	printf("(0x%x) ", instr);
 	
 	instruction* ret = malloc(sizeof(ret)); 
 	ret->opcode	   = (instr & 0xF000) >> 12;
@@ -41,7 +41,19 @@ void eval(haxle_instance* vm, instruction* instr) {
 			break;
 		case ADD_INSTR:
 			printf("ADD R%d, R%d + R%d", instr->regs[0], instr->regs[1], instr->regs[2]);
-			state->regs[instr->regs[0]] = state->regs[1] + state->regs[2];
+			state->regs[instr->regs[0]] = state->regs[instr->regs[1]] + state->regs[instr->regs[2]];
+			break;
+		case SUB_INSTR:
+			printf("SUB R%d, R%d - R%d", instr->regs[0], instr->regs[1], instr->regs[2]);
+			state->regs[instr->regs[0]] = state->regs[instr->regs[1]] - state->regs[instr->regs[2]];
+			break;
+		case MUL_INSTR:
+			printf("MUL R%d, R%d * R%d", instr->regs[0], instr->regs[1], instr->regs[2]);
+			state->regs[instr->regs[0]] = state->regs[instr->regs[1]] * state->regs[instr->regs[2]];
+			break;
+		case DIV_INSTR:
+			printf("DIV R%d, R%d / R%d", instr->regs[0], instr->regs[1], instr->regs[2]);
+			state->regs[instr->regs[0]] = state->regs[instr->regs[1]] / state->regs[instr->regs[2]];
 			break;
 		default:
 			printf("Unknown instruction %x!\n", instr->opcode);
@@ -55,10 +67,10 @@ void eval(haxle_instance* vm, instruction* instr) {
 }
 
 void dump_cpu_state(cpu_state state) {
+	printf("--- CPU state: ");
 	for (int i = 0; i < NUM_REGS; i++) { 
 		printf("R%d = %d\t", i, state.regs[i]);
-	}
-	printf("\n");
+	} printf(" ---\n"); 
 }
 
 void run(haxle_instance* vm) {
@@ -66,8 +78,8 @@ void run(haxle_instance* vm) {
 		unsigned instr = fetch(vm);
 		instruction* real = decode(instr);
 		eval(vm, real);
-		dump_cpu_state(vm->state);
 	}
+	dump_cpu_state(vm->state);
 }
 
 haxle_instance* haxle_init(int* bytecode) {
