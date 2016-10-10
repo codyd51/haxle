@@ -25,9 +25,9 @@ int fetch(int* prog) {
 #define LOAD_INSTR 0x01
 #define ADD_INSTR  0x02
 
-instruction* decode(unsigned instr) {
-	instruction* ret = malloc(sizeof(ret));
-	ret->instruction = (instr & 0xF000) >> 12;
+instruction* decode(unsigned instr) { 
+	instruction* ret = malloc(sizeof(ret)); 
+	ret->instruction = (instr & 0xF000) >> 12; 
 	ret->reg_op0	 = (instr & 0xF00 ) >> 8;
 	ret->reg_op1	 = (instr & 0xF0  ) >> 4;
 	ret->reg_op2	 = (instr & 0xF   );
@@ -58,7 +58,7 @@ void eval(cpu_state* state, instruction* instr) {
 }
 
 void dump_cpu_state(cpu_state* state) {
-	for (int i = 0; i < NUM_REGS; i++) {
+	for (int i = 0; i < NUM_REGS; i++) { 
 		printf("R%d = %d\t", i, state->regs[i]);
 	}
 	printf("\n");
@@ -77,7 +77,27 @@ void run(int* prog) {
 }
 
 int main(int argc, char** argv) {
-	int prog[] = {0x1064, 0x11C8, 0x2201, 0x0000};
+	if (argc != 2) {
+		printf("Please provide an executable file.\n");
+		return 1;
+	}
+
+	//int prog[] = {0x1064, 0x11C8, 0x2201, 0x0000};
+	char* name = argv[1];
+	FILE* fp = fopen(name, "r");
+	if (!fp) {
+		printf("Couldn't open file %s for execution.\n", name);
+		return 1;
+	}
+
+	int prog[2048];
+	fread(&prog, sizeof(int), sizeof(prog), fp);
+
+	for (int i = 0; i < 10; i++) {
+		printf("%x ", prog[i]);
+	}
+	printf("\n");
+
 	run(prog);
 
 	return 0;
