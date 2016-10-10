@@ -104,7 +104,19 @@ void write_instruction(FILE* fp, instruction* instr) {
 
 #define MAX_INSTRUCTIONS 256
 int main(int argc, char** argv) {
-	char* prog = "hlt";
+	if (argc != 2) {
+		printf("Please provide an input file.\n");
+		return 1;
+	}
+	char* input = argv[1];
+	FILE* input_file = fopen(input, "r");
+	if (!input_file) {
+		printf("Couldn't open file %s for reading.\n", input);
+		return 1;
+	}
+	char prog[2048];
+	fread(&prog, sizeof(char), sizeof(prog), input_file);
+	fclose(input_file);
 
 	instruction** ast = malloc(sizeof(instruction) * MAX_INSTRUCTIONS);
 	unsigned linenum = 0;
