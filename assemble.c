@@ -13,17 +13,23 @@ typedef enum instruction_type {
 
 typedef struct instr_arg {
 	instr_type type;
-	int val;
+	short val;
 } instr_arg;
 
 typedef struct instruction {
-	unsigned opcode;
+	short opcode;
 	instr_arg args[MAX_ARGS];
 } instruction;
 
-unsigned parse_op(char* op) {
+short parse_op(char* op) {
 	if (!strcmp(op, "hlt") || !strcmp(op, "HLT")) {
-		return 0xCC;
+		return 0x00;
+	}
+	else if (!strcmp(op, "mov") || !strcmp(op, "MOV")) {
+		return 0x01;
+	}
+	else if (!strcmp(op, "add") || !strcmp(op, "ADD")) {
+		return 0x02;
 	}
 
 	printf("Parsing error: Unknown instruction %s\n", op);
@@ -59,9 +65,16 @@ instr_arg* parse_arg(char* arg_str) {
 instruction* parse_instruction(char** tokens, int count) {
 	instruction* ret = malloc(sizeof(instruction));
 	ret->opcode = parse_op(tokens[0]);
+
+	//count is not zero indexed
+	//subtract 1 to fix that
 	for (int i = 0; i < count - 1; i++) {
+		//don't include instruction, only arguments
+		//so use tokens[i + 1] to get index of arg
+		//(index 0 is instruction)
 		ret->args[i] = *parse_arg(tokens[i + 1]);
 	}
+
 	return ret;
 }
 
@@ -77,11 +90,16 @@ void write_instruction(FILE* fp, instruction* instr) {
 	ret->reg_op2	 = (instr & 0xF   );
 	ret->immediate	 = (instr & 0xFF  );
 	*/
-	long result = 0;
-	unsigned opcode = instr->opcode;
-	opcode = opcode << 12;
-	result |= opcode << 12;
-	fwrite(&opcode, sizeof(unsigned), 1, fp);
+	int result = 0;
+	result |= (instr->opcode) << 12;
+	result |= (instr->args[0].val) << 8;
+	result |= (instr->args[1].val) << 4;
+	result |= (instr->args[2].val & 0xF) ;
+	result |= (instr->args[3].val & 0xFF);
+
+	printf("writing 0x%x\n", result);
+
+	fwrite(&result, sizeof(result), 1, fp);
 }
 
 #define MAX_INSTRUCTIONS 256
@@ -97,7 +115,9 @@ int main(int argc, char** argv) {
 		//split this line into tokens
 		//TODO remove this constant
 		char** tokens = malloc(sizeof(char*) * 32);
-		char* token = strtok(line, " ");
+
+		char* copy = strdup(line);
+		char* token = strtok(copy, " ");
 		int token_count = 0;
 		while (token) {
 			tokens[token_count++] = token;
@@ -125,14 +145,19 @@ int main(int argc, char** argv) {
 	}
 	fclose(fp);
 
-	/*
 	//program assembled!
 	//print out opcodes
+	/*
 	for (int i = 0; i <	MAX_INSTRUCTIONS; i++) {
 		if (!ast[i]) break;
 		dump_instruction(ast[i]);
 	}
 	*/
+
+	for (int i = 0; i < linenum; i++) {
+		free(ast[i]);
+	}
+	free(ast);
 	
 	return 0;
 }
