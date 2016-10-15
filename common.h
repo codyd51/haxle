@@ -4,6 +4,11 @@
 #include <stdbool.h>
 #include <string.h>
 
+#define MAG_0 0xFE
+#define MAG_1 0xED
+#define MAG_2 0xCA
+#define MAG_3 0xFE
+
 typedef enum instr {
 	HLT_INSTR = 0x00,
 	MOV_INSTR,
@@ -27,8 +32,6 @@ typedef struct instr_arg {
 
 typedef struct instruction {
 	short opcode;
-	//instr_arg regs[MAX_ARGS - 1];
 	short regs[MAX_ARGS];
 	short immediate;
-	//instr_arg immediate;
 } instruction;

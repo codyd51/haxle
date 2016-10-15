@@ -105,11 +105,27 @@ int main(int argc, char** argv) {
 	}
 
 #define MAX_SIZE 2048
-	int* prog = malloc(sizeof(int) * MAX_SIZE);
-	fread(prog, sizeof(int), MAX_SIZE, fp);
-	haxle_instance* vm = haxle_init(prog);
+	int* file_data = malloc(sizeof(int) * MAX_SIZE);
+	fread(file_data, sizeof(int), MAX_SIZE, fp);
 
+	//verify magic of file
+	//cast to uint8_t to read individual bytes
+	uint8_t* magic = (uint8_t*)file_data;
+	printf("magic: %x\n", (int)*file_data);
+	if (magic[0] != MAG_0 || magic[1] != MAG_1 || magic[2] != MAG_2 || magic[3] != MAG_3) {
+		printf("File %s contained invalid magic. (%x)\n", name, (int)*file_data);
+		exit(1);
+	}
+
+	//strip magic from VM bytecode
+	//do so by dropping first 4 bytes
+	//an int is exactly 4 bytes, so add 1 int size to original pointer 
+	int* prog = file_data + 1;
+
+	haxle_instance* vm = haxle_init(prog);
 	run(vm);
+
+	free(file_data);
 
 	return 0;
 }

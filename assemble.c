@@ -142,6 +142,10 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	//write magic to file
+	char magic[] = {MAG_0, MAG_1, MAG_2, MAG_3};
+	fwrite(magic, sizeof(char), 4, fp);
+
 	//is using linenum here unsafe?
 	for (int i = 0; i < linenum; i++) {
 		write_instruction(fp, ast[i]);
